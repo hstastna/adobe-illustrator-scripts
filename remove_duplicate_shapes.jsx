@@ -2,21 +2,31 @@
 // Leave only one of all visually identical paths, ignoring very small differences (less strict).
 // The script works also for CompoundPathItems in addition to PathItems.
 
-// Potential Issues or Improvements:
-// - rare hash collisions: if two distinct paths round to the same hash due to low precision, both will be considered duplicates
+// Potential issues, improvements:
+// - rare hash collisions: if two distinct paths round to the same hash due to low precision, both will be considered duplicates - check pathToHash function
 // - for huge documents (thousands of paths), using an object as a hash map can improve performance
 
 var precision = 1; // smallest precision for deduplication is 0 (change according your preference)
 var containerTypes = ["GroupItem", "CompoundPathItem", "Layer"];
+
+// Helper function
+function isContainerType(typeName) {
+  for (var i = 0; i < containerTypes.length; i++) {
+    if (containerTypes[i] === typeName) return true;
+  }
+
+  return false;
+}
 
 // Hash a PathItem's geometry to compare paths (regardless of their color, layer, group, etc.)
 function pathToHash(path) {
   if (!path || !("pathPoints" in path) || path.pathPoints.length === 0)
     return "";
 
+  var pathPointsLength = path.pathPoints.length;
   var pointHashes = [];
 
-  for (var i = 0; i < path.pathPoints.length; i++) {
+  for (var i = 0; i < pathPointsLength; i++) {
     var pt = path.pathPoints[i]; // PathPoint object
 
     pointHashes.push(
@@ -46,9 +56,10 @@ function compoundPathToHash(compoundPath) {
   )
     return "";
 
+  var pathItemsLength = compoundPath.pathItems.length;
   var subpathHashes = [];
 
-  for (var i = 0; i < compoundPath.pathItems.length; i++) {
+  for (var i = 0; i < pathItemsLength; i++) {
     subpathHashes.push(pathToHash(compoundPath.pathItems[i]));
   }
 
@@ -64,7 +75,9 @@ function collectPaths(container, paths, pageItemTypename) {
 
   if (!container || !("pageItems" in container)) return;
 
-  for (var i = 0; i < container.pageItems.length; i++) {
+  var pageItemsLength = container.pageItems.length;
+
+  for (var i = 0; i < pageItemsLength; i++) {
     var pageItem = container.pageItems[i];
 
     // Skip locked, hidden, guides, or clipping items
@@ -93,7 +106,7 @@ function collectPaths(container, paths, pageItemTypename) {
       ) {
         paths.push(pageItem);
       }
-    } else if (containerTypes.indexOf(pageItem.typename) >= 0) {
+    } else if (isContainerType(pageItem.typename)) {
       collectPaths(pageItem, paths, pageItemTypename);
     }
   }
@@ -114,14 +127,16 @@ function main() {
 
   // 1. Deduplicate compound paths first
   var compoundPaths = [];
+  var docLayersLength = doc.layers.length;
 
-  for (var i = 0; i < doc.layers.length; i++) {
+  for (var i = 0; i < docLayersLength; i++) {
     collectCompoundPaths(doc.layers[i], compoundPaths);
   }
 
   var hashToCompoundPaths = {};
+  var compoundPathsLength = compoundPaths.length;
 
-  for (var i = 0; i < compoundPaths.length; i++) {
+  for (var i = 0; i < compoundPathsLength; i++) {
     var compoundPath = compoundPaths[i];
     var hash = compoundPathToHash(compoundPath);
 
@@ -152,7 +167,9 @@ function main() {
 
   // Use selection if available, else all PathItems in document (recursively)
   if (doc.selection && doc.selection.length > 0) {
-    for (var i = 0; i < doc.selection.length; i++) {
+    var docSelectionLength = doc.selection.length;
+
+    for (var i = 0; i < docSelectionLength; i++) {
       var selectionItem = doc.selection[i];
 
       // Skip locked, hidden, guides, or clipping items
@@ -167,17 +184,19 @@ function main() {
 
       if (selectionItem.typename === "PathItem") {
         paths.push(selectionItem);
-      } else if (containerTypes.indexOf(selectionItem.typename) >= 0) {
+      } else if (isContainerType(selectionItem.typename)) {
         collectPaths(selectionItem, paths);
       }
     }
   } else {
-    for (var i = 0; i < doc.layers.length; i++) {
+    for (var i = 0; i < docLayersLength; i++) {
       collectPaths(doc.layers[i], paths);
     }
   }
 
-  if (paths.length === 0 && compoundPaths.length === 0) {
+  var pathsLength = paths.length;
+
+  if (pathsLength === 0 && compoundPathsLength === 0) {
     alert(
       "No eligible paths found (check for locked/hidden items, or groups/compound paths)."
     );
@@ -186,7 +205,7 @@ function main() {
 
   var hashToPaths = {};
 
-  for (var i = 0; i < paths.length; i++) {
+  for (var i = 0; i < pathsLength; i++) {
     var path = paths[i];
     var hash = pathToHash(path);
 
@@ -204,9 +223,10 @@ function main() {
 
   for (var hash in hashToPaths) {
     var duplicatePaths = hashToPaths[hash];
+    var duplicatePathsLength = duplicatePaths.length;
 
     // Keep the first one, remove the rest
-    for (var j = 1; j < duplicatePaths.length; j++) {
+    for (var j = 1; j < duplicatePathsLength; j++) {
       try {
         duplicatePaths[j].remove();
         removedCount++;

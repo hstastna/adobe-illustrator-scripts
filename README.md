@@ -12,7 +12,9 @@ For immediate executing the script, visit
 
 in Illustrator, choose the downloaded script you want to run, and that's it!
 
-## Notes ##
+Before it, select the paths you want to apply the script on. Otherwise all the existing paths of the artwork will be included.
+
+## Notes
 
 It's possible to [run scripts on each launch of Illustrator](https://ai-scripting.docsforadobe.dev/introduction/executingScripts/#startup-scripts-jsx-scripts-only) automatically (_startup stripts_).
 
