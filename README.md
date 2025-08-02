@@ -12,4 +12,10 @@ For immediate executing the script, visit
 
 in Illustrator, choose the downloaded script you want to run, and that's it!
 
-It's also possible to run scripts on each launch of Illustrator (_startup stripts_).
+## Notes ##
+
+It's possible to [run scripts on each launch of Illustrator](https://ai-scripting.docsforadobe.dev/introduction/executingScripts/#startup-scripts-jsx-scripts-only) automatically (_startup stripts_).
+
+Adobe Illustrator’s ExtendScript engine (based on an old version of JavaScript/ECMAScript) does not support default function parameters and other featues of the modern JavaScript. Take it into account when customizing scripts!
+
+For more info check [Adobe Illustrator Scripting Guide](https://ai-scripting.docsforadobe.dev/).
