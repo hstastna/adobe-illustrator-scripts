@@ -11,7 +11,8 @@ var containerTypes = ["GroupItem", "CompoundPathItem", "Layer"];
 
 // Hash a PathItem's geometry to compare paths (regardless of their color, layer, group, etc.)
 function pathToHash(path) {
-  if (!path || !("pathPoints" in path) || path.pathPoints.length === 0) return "";
+  if (!path || !("pathPoints" in path) || path.pathPoints.length === 0)
+    return "";
 
   var pointHashes = [];
 
@@ -22,21 +23,28 @@ function pathToHash(path) {
       [
         pt.anchor[0].toFixed(precision),
         pt.anchor[1].toFixed(precision),
-        pt.leftDirection[0].toFixed(precision), pt.leftDirection[1].toFixed(precision),
-        pt.rightDirection[0].toFixed(precision), pt.rightDirection[1].toFixed(precision),
-        pt.pointType
-      ].join(',')
+        pt.leftDirection[0].toFixed(precision),
+        pt.leftDirection[1].toFixed(precision),
+        pt.rightDirection[0].toFixed(precision),
+        pt.rightDirection[1].toFixed(precision),
+        pt.pointType,
+      ].join(",")
     );
   }
 
   var closed = path.closed ? "closed" : "open"; // check this path's property for its uniqueness
 
-  return pointHashes.join(';') + "|" + closed;
+  return pointHashes.join(";") + "|" + closed;
 }
 
 // Hash all subpaths of a compound path as a single string
 function compoundPathToHash(compoundPath) {
-  if (!compoundPath || !("pathItems" in compoundPath) || compoundPath.pathItems.length === 0) return "";
+  if (
+    !compoundPath ||
+    !("pathItems" in compoundPath) ||
+    compoundPath.pathItems.length === 0
+  )
+    return "";
 
   var subpathHashes = [];
 
@@ -47,25 +55,42 @@ function compoundPathToHash(compoundPath) {
   // Sort for order-insensitive comparison (optional, recommended)
   subpathHashes.sort();
 
-  return subpathHashes.join('|');
+  return subpathHashes.join("|");
 }
 
 // Recursively gather all eligible paths within a container (Layer, Group, CompoundPath, or Document)
-function collectPaths(container, paths, pageItemTypename = "PathItem") {
+function collectPaths(container, paths, pageItemTypename) {
+  if (pageItemTypename === undefined) pageItemTypename = "PathItem";
+
   if (!container || !("pageItems" in container)) return;
 
   for (var i = 0; i < container.pageItems.length; i++) {
     var pageItem = container.pageItems[i];
 
     // Skip locked, hidden, guides, or clipping items
-    if (!pageItem || pageItem.locked || pageItem.hidden || pageItem.guides || pageItem.clipping) continue;
+    if (
+      !pageItem ||
+      pageItem.locked ||
+      pageItem.hidden ||
+      pageItem.guides ||
+      pageItem.clipping
+    )
+      continue;
 
     if (pageItem.typename === pageItemTypename) {
-      if (pageItemTypename === "PathItem" && pageItem.pathPoints && pageItem.pathPoints.length > 0) {
+      if (
+        pageItemTypename === "PathItem" &&
+        pageItem.pathPoints &&
+        pageItem.pathPoints.length > 0
+      ) {
         paths.push(pageItem); // push only if PathItems aren't empty
       }
-      
-      if (pageItemTypename === "CompoundPathItem" && pageItem.pathItems && pageItem.pathItems.length > 0) {
+
+      if (
+        pageItemTypename === "CompoundPathItem" &&
+        pageItem.pathItems &&
+        pageItem.pathItems.length > 0
+      ) {
         paths.push(pageItem);
       }
     } else if (containerTypes.indexOf(pageItem.typename) >= 0) {
@@ -89,7 +114,7 @@ function main() {
 
   // 1. Deduplicate compound paths first
   var compoundPaths = [];
- 
+
   for (var i = 0; i < doc.layers.length; i++) {
     collectCompoundPaths(doc.layers[i], compoundPaths);
   }
@@ -129,9 +154,16 @@ function main() {
   if (doc.selection && doc.selection.length > 0) {
     for (var i = 0; i < doc.selection.length; i++) {
       var selectionItem = doc.selection[i];
-      
+
       // Skip locked, hidden, guides, or clipping items
-      if (!selectionItem || selectionItem.locked || selectionItem.hidden || selectionItem.guides || selectionItem.clipping) continue;
+      if (
+        !selectionItem ||
+        selectionItem.locked ||
+        selectionItem.hidden ||
+        selectionItem.guides ||
+        selectionItem.clipping
+      )
+        continue;
 
       if (selectionItem.typename === "PathItem") {
         paths.push(selectionItem);
@@ -146,7 +178,9 @@ function main() {
   }
 
   if (paths.length === 0 && compoundPaths.length === 0) {
-    alert("No eligible paths found (check for locked/hidden items, or groups/compound paths).");
+    alert(
+      "No eligible paths found (check for locked/hidden items, or groups/compound paths)."
+    );
     return;
   }
 
@@ -182,8 +216,15 @@ function main() {
     }
   }
 
-  alert("Removed " + removedCount + " duplicate path item" + (removedCount === 1 ? ", " : "s, ") + compoundRemovedCount + " duplicate compound path" + (compoundRemovedCount === 1 ? "!" : "s!"));
+  alert(
+    "Removed " +
+      removedCount +
+      " duplicate path item" +
+      (removedCount === 1 ? ", " : "s, ") +
+      compoundRemovedCount +
+      " duplicate compound path" +
+      (compoundRemovedCount === 1 ? "!" : "s!")
+  );
 }
 
 main();
-
